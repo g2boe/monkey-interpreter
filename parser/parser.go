@@ -12,7 +12,14 @@ type Parser struct {
 	curToken token.Token
 	peekToken token.Token
 	errors []string
+	prefixParseFns map[token.TokenType]prefixParseFn
+	infixParseFns map[token.TokenType]infixParseFn
 }
+
+type (
+	prefixParseFn func() ast.Expression
+	infixParseFn func(ast.Expression) ast.Expression
+)
 
 func New(lex *lexer.Lexer) *Parser {
 	parser := &Parser{
@@ -59,6 +66,8 @@ func (parser *Parser) parseStatement() ast.Statement {
 	switch parser.curToken.Type {
 	case token.LET:
 		return parser.parseLetStatement()
+	case token.RETURN:
+		return parser.parseReturnStatement()
 	default:
 		return nil
 	}
@@ -85,6 +94,18 @@ func (parser *Parser) parseLetStatement() *ast.LetStatement {
 	return stmt
 }
 
+func (parser *Parser) parseReturnStatement() *ast.ReturnStatement {
+	stmt := &ast.ReturnStatement{Token: parser.curToken}
+
+	parser.nextToken()
+
+	for !parser.curTokenIs(token.SEMICOLON) {
+		parser.nextToken()
+	}
+
+	return stmt
+}
+
 func (parser *Parser) curTokenIs(tokType token.TokenType) bool {
 	return parser.curToken.Type == tokType
 }
@@ -101,4 +122,12 @@ func (parser *Parser) expectPeek(tokType token.TokenType) bool {
 		parser.peekError(tokType)
 		return false
 	}
+}
+
+func (parser *Parser) registerPrefix(tokenType token.TokenType, fn prefixParseFn) {
+	parser.prefixParseFns[tokenType] = fn
+}
+
+func (parser *Parser) registerInfix(tokenType token.TokenType, fn infixParseFn) {
+	parser.infixParseFns[tokenType] = fn
 }
