@@ -14,6 +14,8 @@ const (
 	RETURN_VALUE_OBJ = "RETURN_VALUE"
 	ERROR_OBJ = "ERROR"
 	FUNCTION_OBJ = "FUNCTION"
+	STRING_OBJ = "STRING"
+	BUILTIN_OBJ = "BUILTIN"
 )
 
 type ObjectType string
@@ -29,8 +31,17 @@ type Integer struct {
 	Value int64
 }
 
+type String struct {
+	Value string
+}
+
 type Boolean struct {
 	Value bool
+}
+
+type BuiltinFunction func(args ...Object) Object
+type Builtin struct {
+	Fn BuiltinFunction
 }
 
 type ReturnValue struct {
@@ -53,9 +64,17 @@ type Error struct {
 func (integer *Integer) Inspect() string { return fmt.Sprintf("%d", integer.Value) }
 func (integer *Integer) Type() ObjectType { return INTEGER_OBJ }
 
+// String functions
+func (str *String) Inspect() string { return str.Value }
+func (str *String) Type() ObjectType { return STRING_OBJ }
+
 // Bool functions
 func (boolean *Boolean) Inspect() string { return fmt.Sprintf("%t", boolean.Value) }
 func (boolean *Boolean) Type() ObjectType { return BOOLEAN_OBJ }
+
+// Built-in type functions
+func (builtIn *Builtin) Inspect() string { return "builtin function" }
+func (builtIn *Builtin) Type() ObjectType { return BUILTIN_OBJ }
 
 // Return functions
 func (retVal *ReturnValue) Inspect() string { return retVal.Inspect() }

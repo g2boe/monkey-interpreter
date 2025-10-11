@@ -80,6 +80,16 @@ type CallExpression struct {
 	Arguments []Expression
 }
 
+type ArrayLiteral struct {
+	Token token.Token
+	Elements []Expression
+}
+
+type StringLiteral struct {
+	Token token.Token
+	Value string
+}
+
 type IntegerLiteral struct {
 	Token token.Token
 	Value int64
@@ -266,6 +276,28 @@ func (callExpression *CallExpression) String() string {
 
 	return out.String()
 }
+
+// Array literal functions
+func (array *ArrayLiteral) expressionNode() {}
+func (array *ArrayLiteral) TokenLiteral() string { return array.Token.Literal }
+func (array *ArrayLiteral) String() string {
+	var out bytes.Buffer
+
+	elements := []string{}
+	for _, el := range array.Elements {
+		elements = append(elements, el.String())
+	}
+
+	out.WriteString("[")
+	out.WriteString(strings.Join(elements, ", "))
+	out.WriteString("]")
+	return out.String()
+}
+
+// String literal functions
+func (str *StringLiteral) expressionNode() {}
+func (str *StringLiteral) TokenLiteral() string { return str.Token.Literal }
+func (str *StringLiteral) String() string { return str.Token.Literal }
 
 // Integer literal functions
 func (intLiteral *IntegerLiteral) expressionNode() {}
