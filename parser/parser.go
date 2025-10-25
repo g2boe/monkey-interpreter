@@ -17,6 +17,7 @@ const (
 	PRODUCT
 	PREFIX
 	CALL
+	INDEX
 )
 
 var precedences = map[token.TokenType]int{
@@ -29,6 +30,7 @@ var precedences = map[token.TokenType]int{
 	token.SLASH: PRODUCT,
 	token.ASTERISK: PRODUCT,
 	token.LPAREN: CALL,
+	token.LBRACKET: INDEX,
 }
 
 type Parser struct {
@@ -78,6 +80,7 @@ func New(lex *lexer.Lexer) *Parser {
 	parser.registerInfix(token.LT, parser.parseInfixExpression)
 	parser.registerInfix(token.GT, parser.parseInfixExpression)
 	parser.registerInfix(token.LPAREN, parser.parseCallExpression)
+	parser.registerInfix(token.LBRACKET, parser.parseIndexExpression)
 
 	return parser
 }
@@ -197,6 +200,25 @@ func (parser *Parser) parseFunctionLiteral() ast.Expression {
 	lit.Body = parser.parseBlockStatement()
 
 	return lit
+}
+
+func (parser *Parser) parseArrayLiteral() ast.Expression {
+	array := &ast.ArrayLiteral{Token: parser.curToken}
+	array.Elements = parser.parseExpressionList(token.RBRACKET)
+	return array
+}
+
+func (parser *Parser) parseIndexExpression(left ast.Expression) ast.Expression {
+	exp := &ast.IndexExpression{Token: parser.curToken, Left: left}
+
+	parser.nextToken()
+	exp.Index = parser.parseExpression(LOWEST)
+	
+	if !parser.expectPeek(token.RBRACKET) {
+		return nil
+	}
+
+	return exp
 }
 
 func (parser *Parser) parseCallExpression(function ast.Expression) ast.Expression {
@@ -377,13 +399,6 @@ func (parser *Parser) parseExpressionStatement() *ast.ExpressionStatement {
 	}
 
 	return stmt
-}
-
-func (parser *Parser) parseArrayLiteral() ast.Expression {
-	array := &ast.ArrayLiteral{Token: parser.curToken}
-	array.Elements = parser.parseExpressionList(token.RBRACKET)
-
-	return array
 }
 
 func (parser *Parser) parseExpressionList(end token.TokenType) []ast.Expression {

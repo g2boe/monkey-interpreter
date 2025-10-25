@@ -16,6 +16,7 @@ const (
 	FUNCTION_OBJ = "FUNCTION"
 	STRING_OBJ = "STRING"
 	BUILTIN_OBJ = "BUILTIN"
+	ARRAY_OBJ = "ARRAY"
 )
 
 type ObjectType string
@@ -37,6 +38,10 @@ type String struct {
 
 type Boolean struct {
 	Value bool
+}
+
+type Array struct {
+	Elements []Object
 }
 
 type BuiltinFunction func(args ...Object) Object
@@ -71,6 +76,23 @@ func (str *String) Type() ObjectType { return STRING_OBJ }
 // Bool functions
 func (boolean *Boolean) Inspect() string { return fmt.Sprintf("%t", boolean.Value) }
 func (boolean *Boolean) Type() ObjectType { return BOOLEAN_OBJ }
+
+// Array functions
+func (array *Array) Type() ObjectType { return ARRAY_OBJ }
+func (array *Array) Inspect() string {
+	var out bytes.Buffer
+
+	elements := []string{}
+	for _, e := range array.Elements {
+		elements = append(elements, e.Inspect())
+	}
+
+	out.WriteString("[")
+	out.WriteString(strings.Join(elements, ", "))
+	out.WriteString("]")
+
+	return out.String()
+}
 
 // Built-in type functions
 func (builtIn *Builtin) Inspect() string { return "builtin function" }
